@@ -53,3 +53,47 @@ resource "aws_security_group" "allow_ssh" {
         Name = "allow_ssh"
     }
 }
+
+# Definimos una estructura data para obtener la info de una imagen AMI RedHat de AWS
+data "aws_ami" "rhel_8_5" {
+    most_recent = true
+    owners = ["309956199498"] // Red Hat's Account ID
+    filter {
+        name   = "name"
+        values = ["RHEL-8.5*"]
+    }
+    filter {
+        name   = "architecture"
+        values = ["x86_64"]
+    }
+    filter {
+        name   = "root-device-type"
+        values = ["ebs"]
+    }
+    filter {
+        name   = "virtualization-type"
+        values = ["hvm"]
+    }
+}
+
+# Definimos un recurso de instancia EC2
+resource "aws_instance" "web" {
+    ami = data.aws_ami.rhel_8_5.id
+    instance_type = "t2.micro"
+    key_name = aws_key_pair.deployer.key_name
+    vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+    subnet_id = element(module.vpc.public_subnets,1)
+    tags = {
+        Name = "HelloWorld"
+    }
+}
+
+# Mostramos el VPC ID obtenido como resultado
+output "VPC-ID" {
+    value = module.vpc.vpc_id
+}
+
+# Mostramos la subred de la VM como resultado
+output "VPC-Subnet" {
+    value = element(module.vpc.public_subnets,1)
+}
