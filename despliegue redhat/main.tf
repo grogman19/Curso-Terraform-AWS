@@ -97,3 +97,13 @@ output "VPC-ID" {
 output "VPC-Subnet" {
     value = element(module.vpc.public_subnets,1)
 }
+
+# Sacamos la IP pública de la instancia desplegada
+output "ip_instance" {
+    value = aws_instance.web.public_ip
+}
+
+# Sacamos el comando directo para conectar por ssh a la instancia
+output "ssh" {
+    value = "ssh -l ec2-user ${aws_instance.web.public_ip}"
+}
