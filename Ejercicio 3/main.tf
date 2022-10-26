@@ -1,9 +1,15 @@
+# Definimos la variable con el path a la key ssh
+variable "ssh_key_path" {}
+
 # Definimos la variable de la zona de la región
 variable "region" {}
 
+# Definimos la variable de la zona de disponibilidad
+variable "availability_zone" {}
+
 # Definimos la variable del puerto del balanceador de carga
 variable "server_port" {
-    description = "The port the server will use for HTTP requests"
+    description = "The port the server will use for SFTP requests"
     type = number
 }
 
@@ -12,23 +18,18 @@ provider "aws" {
     region = var.region
 }
 
+# Recurso de clave SSH en AWS
+resource "aws_key_pair" "deployer" {
+    key_name = "aibanez-terraform-key"
+    public_key = file(var.ssh_key_path)
+}
+
 # Definimos recursos de security group para las instancias y para el balanceador
 resource "aws_security_group" "instance" {
-    name = "terraform-example-instance"
+    name = "terraform-sftp-instance"
     ingress {
         from_port = var.server_port
         to_port = var.server_port
-        protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-}
-
-resource "aws_security_group" "alb" {
-    name = "terraform-example-alb"
-    # Allow inbound HTTP requests
-    ingress {
-        from_port = 80
-        to_port = 80
         protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
@@ -38,7 +39,18 @@ resource "aws_security_group" "alb" {
         to_port = 0
         protocol = "-1"
         cidr_blocks = ["0.0.0.0/0"]
-        }
+    }
+}
+
+resource "aws_security_group" "alb" {
+    name = "terraform-sftp-alb"
+    # Allow inbound HTTP requests
+    ingress {
+        from_port = 22
+        to_port = 22
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 }
 
 # Definimos datas para obtener info del VPC y subredes por defecto
@@ -50,6 +62,55 @@ data "aws_subnets" "default" {
     filter {
         name = "vpc-id"
         values = [data.aws_vpc.default.id]
+    }
+}
+
+# Definimos un recurso de instancia EC2
+resource "aws_instance" "sftp1" {
+    ami = "ami-09e310d4361a3b13a"
+    instance_type = "t2.micro"
+    key_name = aws_key_pair.deployer.key_name
+    vpc_security_group_ids = [aws_security_group.instance.id]
+    subnet_id = element(data.aws_subnets.default.ids,0)
+    tags = {
+        Name = "SFTP Server 01"
+    }
+}
+
+# Definimos un recurso EBS de storage de bloques
+resource "aws_ebs_volume" "sftp" {
+    availability_zone = var.availability_zone
+    size = 4
+    type = "gp3"
+    encrypted = true
+    tags = {
+        Name = "sftp-ebs"
+    }
+}
+
+# Definimos un recurso de volume attachment
+resource "aws_volume_attachment" "sftp01" {
+    device_name = "/dev/sdh"
+    volume_id = aws_ebs_volume.sftp.id
+    instance_id = aws_instance.sftp1.id
+}
+
+# Sacamos el comando directo para conectar por ssh a la instancia 01
+output "sftp_server_01" {
+    value = "ssh -l ec2-user ${aws_instance.sftp1.public_ip}"
+}
+
+/*
+
+# Definimos un recurso de instancia EC2
+resource "aws_instance" "sftp2" {
+    ami = "ami-09e310d4361a3b13a"
+    instance_type = "t2.micro"
+    key_name = aws_key_pair.deployer.key_name
+    vpc_security_group_ids = [aws_security_group.instance.id]
+    subnet_id = element(data.aws_subnets.default.ids,1)
+    tags = {
+        Name = "SFTP Server 02"
     }
 }
 
@@ -146,3 +207,4 @@ output "alb_dns_name" {
     value = aws_lb.example.dns_name
     description = "The domain name of the load balancer"
 }
+*/
