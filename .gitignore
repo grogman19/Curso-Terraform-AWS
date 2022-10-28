@@ -61,3 +61,5 @@ Ejercicio 4/terraform.tfstate.backup
 Ejercicio 4/terraform.tfstate
 Ejercicio 4/.terraform.lock.hcl
 Ejercicio 1/.terraform/terraform.tfstate
+Ejercicio 3/.terraform/terraform.tfstate
+Ejercicio 3/.terraform/providers/registry.terraform.io/hashicorp/aws/4.37.0/windows_amd64/terraform-provider-aws_v4.37.0_x5.exe
