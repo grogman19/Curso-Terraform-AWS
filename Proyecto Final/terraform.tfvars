@@ -1,6 +1,6 @@
 database_name           = "wordpress_db"   // database name
 database_user           = "wordpress_user" //database username
-region                  = "eu-west-1" //Ireland region
+region                  = "eu-west-1" //sydney region
 IsUbuntu                = true             // true for ubuntu,false for linux 2  //boolean type
 
 // avaibility zone and their CIDR
@@ -13,8 +13,8 @@ subnet2_cidr = "10.0.2.0/24"     //Private Subnet for RDS
 subnet3_cidr = "10.0.3.0/24"     //Private subnet for RDS
 
 
-PUBLIC_KEY_PATH  = "XXX" // key name for ec2, make sure it is created before terrafomr apply
-PRIV_KEY_PATH    = "XXX"
+PUBLIC_KEY_PATH  = "C:/Users/Grogman/.ssh/id_rsa.pub" // key name for ec2, make sure it is created before terrafomr apply
+PRIV_KEY_PATH    = "C:/Users/Grogman/.ssh/id_rsa"
 instance_type    = "t2.micro"    //type of instance
 instance_class   = "db.t2.micro" //type of RDS Instance
 root_volume_size = 22
