@@ -1,3 +1,14 @@
+# Configuramos terraform para guardar los estados en un bucket S3 que hemos creado previamente con el lock en DynamoDB
+terraform {
+    backend "s3" {
+        bucket         = "terraform-backend-cdd-bucket"
+        key            = "Ejercicio 1/terraform.tfstate"
+        region         = "eu-west-1"
+        dynamodb_table = "terraform-up-and-running-locks"
+        encrypt        = true
+    }
+}
+
 # Definimos la variable con el path a la key ssh
 variable "ssh_key_path" {}
 
